@@ -251,7 +251,6 @@ class OIDCAuthenticationBackendTestCase(TestCase):
         request_mock.post.assert_called_once_with(
             "https://server.example.com/token",
             data=post_data,
-            auth=None,
             verify=True,
             timeout=None,
             proxies=None,
@@ -300,7 +299,6 @@ class OIDCAuthenticationBackendTestCase(TestCase):
         request_mock.post.assert_called_once_with(
             "https://server.example.com/token",
             data=post_data,
-            auth=None,
             verify=True,
             timeout=None,
             proxies=None,
@@ -353,7 +351,6 @@ class OIDCAuthenticationBackendTestCase(TestCase):
         request_mock.post.assert_called_once_with(
             "https://server.example.com/token",
             data=post_data,
-            auth=None,
             verify=True,
             timeout=None,
             proxies=None,
@@ -407,7 +404,6 @@ class OIDCAuthenticationBackendTestCase(TestCase):
         request_mock.post.assert_called_once_with(
             "https://server.example.com/token",
             data=post_data,
-            auth=None,
             verify=True,
             timeout=None,
             proxies=None,
@@ -462,7 +458,6 @@ class OIDCAuthenticationBackendTestCase(TestCase):
         request_mock.post.assert_called_once_with(
             "https://server.example.com/token",
             data=post_data,
-            auth=None,
             verify=True,
             timeout=None,
             proxies=None,

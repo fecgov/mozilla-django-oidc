@@ -257,23 +257,17 @@ class OIDCAuthenticationBackend(ModelBackend):
                 self.OIDC_RP_CLIENT_SECRET,
                 algorithm=self.OIDC_RP_SIGN_ALGO
             )
-            token_payload = {
+            code = payload.get("code")
+            payload = {
                 "client_assertion": encoded_jwt,
                 "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                "code": payload.get("code"),
+                "code": code,
                 "grant_type": "authorization_code",
             }
-            response = requests.post(self.OIDC_OP_TOKEN_ENDPOINT, data=token_payload)
-            self.raise_token_response_error(response)
-            return response.json()
-
-        # Default implementation
-        auth = None
 
         response = requests.post(
             self.OIDC_OP_TOKEN_ENDPOINT,
             data=payload,
-            auth=auth,
             verify=self.get_settings("OIDC_VERIFY_SSL", True),
             timeout=self.get_settings("OIDC_TIMEOUT", None),
             proxies=self.get_settings("OIDC_PROXY", None),
