@@ -1,4 +1,3 @@
-import time
 import logging
 from urllib.parse import urlencode
 
@@ -57,15 +56,6 @@ class OIDCAuthenticationCallbackView(View):
         ):
             auth.login(self.request, self.user)
 
-        # Figure out when this id_token will expire. This is ignored unless you're
-        # using the SessionRefresh middleware.
-        expiration_interval = self.get_settings(
-            "OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS", 60 * 15
-        )
-        self.request.session["oidc_id_token_expiration"] = (
-            time.time() + expiration_interval
-        )
-
         return HttpResponseRedirect(self.success_url)
 
     def get(self, request):
@@ -85,9 +75,6 @@ class OIDCAuthenticationCallbackView(View):
                 request.session.save()
 
             # Make sure the user doesn't get to continue to be logged in
-            # otherwise the refresh middleware will force the user to
-            # redirect to authorize again if the session refresh has
-            # expired.
             if request.user.is_authenticated:
                 auth.logout(request)
             assert not request.user.is_authenticated
