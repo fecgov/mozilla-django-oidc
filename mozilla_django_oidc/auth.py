@@ -1,5 +1,3 @@
-import base64
-import hashlib
 import json
 import logging
 import requests
@@ -25,26 +23,6 @@ from requests.exceptions import HTTPError
 from mozilla_django_oidc.utils import absolutify, import_from_settings
 
 LOGGER = logging.getLogger(__name__)
-
-
-def default_username_algo(unique_identifier, claims=None):
-    """Generate username for the Django user.
-
-    :arg str/unicode unique_identifier: the unique_identifier to use to generate a username
-    :arg dic claims: the claims from your OIDC provider, currently unused
-
-    :returns: str/unicode
-
-    """
-    # bluntly stolen from django-browserid
-    # store the username as a base64 encoded sha224 of the unique_identifier
-    # this protects against data leakage because usernames are often
-    # treated as public identifiers (so we can't use the unique_identifier).
-    username = base64.urlsafe_b64encode(
-        hashlib.sha1(force_bytes(unique_identifier)).digest()
-    ).rstrip(b"=")
-
-    return smart_str(username)
 
 
 class OIDCAuthenticationBackend(ModelBackend):
@@ -160,7 +138,7 @@ class OIDCAuthenticationBackend(ModelBackend):
                 # also pass the claims to the custom user name algo
                 return username_algo(self.get_idp_unique_id_value(claims), claims)
 
-        return default_username_algo(self.get_idp_unique_id_value(claims), claims)
+        return self.get_idp_unique_id_value(claims)
 
     def update_user(self, user, claims):
         """Update existing user with new email, if necessary save, and return user"""

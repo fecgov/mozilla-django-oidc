@@ -15,22 +15,9 @@ from django.utils.encoding import force_bytes, smart_str
 from josepy.b64 import b64encode
 from josepy.jwa import ES256
 
-from mozilla_django_oidc.auth import OIDCAuthenticationBackend, default_username_algo
+from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 User = get_user_model()
-
-
-class DefaultUsernameAlgoTestCase(TestCase):
-    def run_test(self, data, expected):
-        actual = default_username_algo(data)
-        self.assertEqual(actual, expected)
-        self.assertEqual(type(actual), type(expected))
-
-    def test_empty(self):
-        self.run_test("", "2jmj7l5rSw0yVb_vlWAYkK_YBwk")
-
-    def test_email(self):
-        self.run_test("janet@example.com", "VUCUpl08JVpFeAFKBYkAjLhsQ1c")
 
 
 class OIDCAuthenticationBackendTestCase(TestCase):
