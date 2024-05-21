@@ -1,9 +1,6 @@
-import base64
-import hashlib
 import json
 import logging
 import requests
-from requests.auth import HTTPBasicAuth
 
 # logindotgov-oidc
 import secrets
@@ -26,26 +23,6 @@ from requests.exceptions import HTTPError
 from mozilla_django_oidc.utils import absolutify, import_from_settings
 
 LOGGER = logging.getLogger(__name__)
-
-
-def default_username_algo(unique_identifier, claims=None):
-    """Generate username for the Django user.
-
-    :arg str/unicode unique_identifier: the unique_identifier to use to generate a username
-    :arg dic claims: the claims from your OIDC provider, currently unused
-
-    :returns: str/unicode
-
-    """
-    # bluntly stolen from django-browserid
-    # store the username as a base64 encoded sha224 of the unique_identifier
-    # this protects against data leakage because usernames are often
-    # treated as public identifiers (so we can't use the unique_identifier).
-    username = base64.urlsafe_b64encode(
-        hashlib.sha1(force_bytes(unique_identifier)).digest()
-    ).rstrip(b"=")
-
-    return smart_str(username)
 
 
 class OIDCAuthenticationBackend(ModelBackend):
@@ -129,20 +106,7 @@ class OIDCAuthenticationBackend(ModelBackend):
         email = claims.get("email")
         username = self.get_username(claims)
 
-        # Create user with custom values if they're specified
-        if not (
-            (self.OIDC_RP_UNIQUE_IDENTIFIER == "email")
-            or (self.OIDC_RP_UNIQUE_IDENTIFIER == "username")
-        ):
-            # { app_field: idp_field}
-            # { "uuid": "sub_value"}
-            extra_params = {
-                self.OIDC_RP_UNIQUE_IDENTIFIER: self.get_idp_unique_id_value(claims)
-            }
-        else:
-            extra_params = {}
-
-        return self.UserModel.objects.create_user(username, email=email, **extra_params)
+        return self.UserModel.objects.create_user(username, email=email)
 
     def get_username(self, claims):
         """Generate username based on claims."""
@@ -161,7 +125,7 @@ class OIDCAuthenticationBackend(ModelBackend):
                 # also pass the claims to the custom user name algo
                 return username_algo(self.get_idp_unique_id_value(claims), claims)
 
-        return default_username_algo(self.get_idp_unique_id_value(claims), claims)
+        return self.get_idp_unique_id_value(claims)
 
     def update_user(self, user, claims):
         """Update existing user with new email, if necessary save, and return user"""
@@ -293,30 +257,17 @@ class OIDCAuthenticationBackend(ModelBackend):
                 self.OIDC_RP_CLIENT_SECRET,
                 algorithm=self.OIDC_RP_SIGN_ALGO
             )
-            token_payload = {
+            code = payload.get("code")
+            payload = {
                 "client_assertion": encoded_jwt,
                 "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                "code": payload.get("code"),
+                "code": code,
                 "grant_type": "authorization_code",
             }
-            response = requests.post(self.OIDC_OP_TOKEN_ENDPOINT, data=token_payload)
-            self.raise_token_response_error(response)
-            return response.json()
-
-        # Default implementation
-        auth = None
-        if self.get_settings("OIDC_TOKEN_USE_BASIC_AUTH", False):
-            # When Basic auth is defined, create the Auth Header and remove secret from payload.
-            user = payload.get("client_id")
-            pw = payload.get("client_secret")
-
-            auth = HTTPBasicAuth(user, pw)
-            del payload["client_secret"]
 
         response = requests.post(
             self.OIDC_OP_TOKEN_ENDPOINT,
             data=payload,
-            auth=auth,
             verify=self.get_settings("OIDC_VERIFY_SSL", True),
             timeout=self.get_settings("OIDC_TIMEOUT", None),
             proxies=self.get_settings("OIDC_PROXY", None),
