@@ -106,20 +106,7 @@ class OIDCAuthenticationBackend(ModelBackend):
         email = claims.get("email")
         username = self.get_username(claims)
 
-        # Create user with custom values if they're specified
-        if not (
-            (self.OIDC_RP_UNIQUE_IDENTIFIER == "email")
-            or (self.OIDC_RP_UNIQUE_IDENTIFIER == "username")
-        ):
-            # { app_field: idp_field}
-            # { "uuid": "sub_value"}
-            extra_params = {
-                self.OIDC_RP_UNIQUE_IDENTIFIER: self.get_idp_unique_id_value(claims)
-            }
-        else:
-            extra_params = {}
-
-        return self.UserModel.objects.create_user(username, email=email, **extra_params)
+        return self.UserModel.objects.create_user(username, email=email)
 
     def get_username(self, claims):
         """Generate username based on claims."""
