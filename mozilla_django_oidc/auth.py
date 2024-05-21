@@ -3,7 +3,6 @@ import hashlib
 import json
 import logging
 import requests
-from requests.auth import HTTPBasicAuth
 
 # logindotgov-oidc
 import secrets
@@ -305,13 +304,6 @@ class OIDCAuthenticationBackend(ModelBackend):
 
         # Default implementation
         auth = None
-        if self.get_settings("OIDC_TOKEN_USE_BASIC_AUTH", False):
-            # When Basic auth is defined, create the Auth Header and remove secret from payload.
-            user = payload.get("client_id")
-            pw = payload.get("client_secret")
-
-            auth = HTTPBasicAuth(user, pw)
-            del payload["client_secret"]
 
         response = requests.post(
             self.OIDC_OP_TOKEN_ENDPOINT,

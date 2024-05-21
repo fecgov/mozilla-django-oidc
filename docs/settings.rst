@@ -267,11 +267,6 @@ of ``mozilla-django-oidc``.
 
       https://tools.ietf.org/html/rfc7519#section-6
 
-.. py:attribute:: OIDC_TOKEN_USE_BASIC_AUTH
-
-   :default: False
-
-   Use HTTP Basic Authentication instead of sending the client secret in token request POST body.
 
 .. py:attribute:: ALLOW_LOGOUT_GET_METHOD
 
